@@ -4,6 +4,7 @@ import math
 import ctypes
 import ctypes.wintypes as wt
 import threading
+import sys
 from collections import deque
 
 # ── Windows low-level mouse hook ──────────────────────────────────────────────
@@ -156,7 +157,7 @@ class App:
         self._anim()
         self.root.bind("<Motion>",  self._motion)
         self.root.bind("<space>",   lambda e: self._toggle_pause())
-        self.root.bind("<Escape>",  lambda e: self.root.destroy())
+        self.root.bind("<Escape>",  lambda e: self._quit())
         self.root.bind("r",         lambda e: self._reset())
         self.root.bind("R",         lambda e: self._reset())
 
@@ -345,7 +346,7 @@ class App:
         self._close_tx = c.create_text(GCX, qy,
             text="✕  CLOSE PROGRAM", font=("Segoe UI", sf(12), "bold"), fill=DIM)
         for item in [self._close_bg, self._close_tx]:
-            c.tag_bind(item, "<Button-1>", lambda e: self.root.destroy())
+            c.tag_bind(item, "<Button-1>", lambda e: self._quit())
             c.tag_bind(item, "<Enter>",
                 lambda e: [c.itemconfig(self._close_bg,
                                fill=lerp_col(RED, BG, 0.6), outline=RED),
@@ -601,6 +602,15 @@ class App:
                     self.c.itemconfig(self._zone_hint, text="")
 
         self.root.after(16, self._anim)
+
+    def _quit(self):
+        try:
+            self.root.overrideredirect(False)  # restore normal window before exit
+            self.root.quit()
+            self.root.destroy()
+        except Exception:
+            pass
+        sys.exit(0)
 
     def _reset(self):
         self.peak = 0
