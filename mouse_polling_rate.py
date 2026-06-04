@@ -139,12 +139,10 @@ class App:
         self.GCY  = int(BASE_GCY  * SH / BASE_H)   # gauge cy tracks height
         self.GR   = sc(BASE_GR)                     # radius uniform scale
 
-        # Borderless window covering full screen — no cursor confinement
-        root.overrideredirect(True)
+        # Borderless fullscreen via Win32 — never captures the mouse
         root.geometry(f"{SW}x{SH}+0+0")
-        root.lift()
         root.update()
-        root.grab_release()   # prevent implicit mouse grab from overrideredirect
+        self._make_borderless(root, SW, SH)
 
         self.peak     = 0
         self.current  = 0
@@ -155,7 +153,6 @@ class App:
         self.mx = self.my = -999
 
         self._build()
-        self.root.grab_release()
         self._tick()
         self._anim()
         self.root.bind("<Motion>",  self._motion)
@@ -163,6 +160,25 @@ class App:
         self.root.bind("<Escape>",  lambda e: self._quit())
         self.root.bind("r",         lambda e: self._reset())
         self.root.bind("R",         lambda e: self._reset())
+
+    # ── Borderless window via Win32 (no overrideredirect = no mouse capture) ──
+    @staticmethod
+    def _make_borderless(root, w, h):
+        GWL_STYLE    = -16
+        WS_CAPTION   = 0x00C00000
+        WS_THICKFRAME= 0x00040000
+        WS_BORDER    = 0x00800000
+        WS_DLGFRAME  = 0x00400000
+        SWP_FLAGS    = 0x0020 | 0x0002 | 0x0001 | 0x0004  # FRAMECHANGED|NOMOVE|NOSIZE|NOZORDER
+
+        hwnd = ctypes.windll.user32.GetParent(root.winfo_id())
+        if not hwnd:
+            hwnd = root.winfo_id()
+
+        style = ctypes.windll.user32.GetWindowLongW(hwnd, GWL_STYLE)
+        style &= ~(WS_CAPTION | WS_THICKFRAME | WS_BORDER | WS_DLGFRAME)
+        ctypes.windll.user32.SetWindowLongW(hwnd, GWL_STYLE, style)
+        ctypes.windll.user32.SetWindowPos(hwnd, 0, 0, 0, w, h, SWP_FLAGS)
 
     # ── Scale shortcuts ───────────────────────────────────────────────────────
     def sc(self, n): return int(n * self.S)
@@ -426,7 +442,6 @@ class App:
 
     def _toggle_pause(self):
         self.paused = not self.paused
-        self.root.grab_release()   # ensure cursor is always free
         if self.paused:
             self.c.itemconfig(self._pause_overlay,
                 text="⏸  PAUSED\nPress SPACE to resume  •  ESC to close",
@@ -609,7 +624,6 @@ class App:
 
     def _quit(self):
         try:
-            self.root.overrideredirect(False)  # restore normal window before exit
             self.root.quit()
             self.root.destroy()
         except Exception:
