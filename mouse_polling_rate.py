@@ -143,6 +143,8 @@ class App:
         root.overrideredirect(True)
         root.geometry(f"{SW}x{SH}+0+0")
         root.lift()
+        root.update()
+        root.grab_release()   # prevent implicit mouse grab from overrideredirect
 
         self.peak     = 0
         self.current  = 0
@@ -153,6 +155,7 @@ class App:
         self.mx = self.my = -999
 
         self._build()
+        self.root.grab_release()
         self._tick()
         self._anim()
         self.root.bind("<Motion>",  self._motion)
@@ -423,6 +426,7 @@ class App:
 
     def _toggle_pause(self):
         self.paused = not self.paused
+        self.root.grab_release()   # ensure cursor is always free
         if self.paused:
             self.c.itemconfig(self._pause_overlay,
                 text="⏸  PAUSED\nPress SPACE to resume  •  ESC to close",
