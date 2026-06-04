@@ -154,7 +154,7 @@ class App:
         self._tick()
         self._anim()
         self.root.bind("<Motion>",  self._motion)
-        self.root.bind("<space>",   lambda e: self._handle_space())
+        self.root.bind("<space>",   lambda e: self._toggle_pause())
         self.root.bind("<Escape>",  lambda e: self.root.destroy())
 
     # ── Scale shortcuts ───────────────────────────────────────────────────────
@@ -396,7 +396,7 @@ class App:
 
         self._pause_overlay = c.create_text(
             (zx1+zx2)//2, (zy1+zy2)//2,
-            text="⏸  PAUSED\nSPACE again = close  •  ESC = close",
+            text="⏸  PAUSED\nPress SPACE to resume  •  ESC to close",
             font=("Segoe UI", sf(36), "bold"), fill=RED,
             justify="center", state="hidden")
 
@@ -406,13 +406,6 @@ class App:
         self._cur_ring2 = c.create_oval(0,0,0,0, outline=P3, width=sc(2), state="hidden")
         self._cur_ring  = c.create_oval(0,0,0,0, outline=P2, width=sc(3), state="hidden")
         self._cur_dot   = c.create_oval(0,0,0,0, fill=WHITE, outline="", state="hidden")
-
-    # ── Space: pause first, close second ─────────────────────────────────────
-    def _handle_space(self):
-        if self.paused:
-            self.root.destroy()
-        else:
-            self._toggle_pause()
 
     def _refresh_pause_style(self):
         if self.paused:
@@ -428,7 +421,7 @@ class App:
         self.paused = not self.paused
         if self.paused:
             self.c.itemconfig(self._pause_overlay,
-                text="⏸  PAUSED\nSPACE again = close  •  ESC = close",
+                text="⏸  PAUSED\nPress SPACE to resume  •  ESC to close",
                 state="normal")
             self.c.itemconfig(self._zone_hint, text="")
         else:
