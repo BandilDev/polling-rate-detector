@@ -127,7 +127,8 @@ class App:
         self._tick()
         self._anim()
         self.root.bind("<Motion>", self._motion)
-        self.root.bind("<space>", lambda e: self._toggle_pause())
+        self.root.bind("<space>",  lambda e: self._handle_space())
+        self.root.bind("<Escape>", lambda e: self.root.destroy())
 
     # ─────────────────────────────────────────────────────────────────────────
     def _build(self):
@@ -309,6 +310,27 @@ class App:
             font=("Segoe UI", 12, "bold"), fill=DIM)
         for item in [self._pause_bg, self._pause_tx]:
             c.tag_bind(item, "<Button-1>", lambda e: self._toggle_pause())
+            c.tag_bind(item, "<Enter>",
+                lambda e: [c.itemconfig(self._pause_bg, fill=CARD2, outline=P3),
+                           c.itemconfig(self._pause_tx, fill=P2)])
+            c.tag_bind(item, "<Leave>",
+                lambda e: self._refresh_pause_style())
+
+        # ── Close button ─────────────────────────────────────────────────────
+        qy = py + 66
+        self._close_bg = round_rect(c, GCX-160, qy-25, GCX+160, qy+25, r=25,
+            fill=DIMMEST, outline=BORDER, width=1)
+        self._close_tx = c.create_text(GCX, qy,
+            text="✕  CLOSE PROGRAM",
+            font=("Segoe UI", 12, "bold"), fill=DIM)
+        for item in [self._close_bg, self._close_tx]:
+            c.tag_bind(item, "<Button-1>", lambda e: self.root.destroy())
+            c.tag_bind(item, "<Enter>",
+                lambda e: [c.itemconfig(self._close_bg, fill=lerp_col(RED, BG, 0.6), outline=RED),
+                           c.itemconfig(self._close_tx, fill=RED)])
+            c.tag_bind(item, "<Leave>",
+                lambda e: [c.itemconfig(self._close_bg, fill=DIMMEST, outline=BORDER),
+                           c.itemconfig(self._close_tx, fill=DIM)])
 
         # ════════════════════════════════════════════════════════════════════
         # RIGHT PANEL — detection zone
@@ -369,20 +391,35 @@ class App:
         self._cur_ring  = c.create_oval(0,0,0,0, outline=P2, width=3, state="hidden")
         self._cur_dot   = c.create_oval(0,0,0,0, fill=WHITE, outline="", state="hidden")
 
-    # ── Pause toggle ─────────────────────────────────────────────────────────
-    def _toggle_pause(self):
-        self.paused = not self.paused
+    # ── Space: pause first press, close second press ─────────────────────────
+    def _handle_space(self):
+        if self.paused:
+            # Already paused — second press closes
+            self.root.destroy()
+        else:
+            self._toggle_pause()
+
+    def _refresh_pause_style(self):
         if self.paused:
             self.c.itemconfig(self._pause_bg, fill=lerp_col(RED, BG, 0.7), outline=RED)
             self.c.itemconfig(self._pause_tx,
                 text="⏸  SPACE  —  RESUME READING", fill=RED)
-            self.c.itemconfig(self._pause_overlay, state="normal")
-            self.c.itemconfig(self._zone_hint, text="")
         else:
             self.c.itemconfig(self._pause_bg, fill=DIMMEST, outline=BORDER)
             self.c.itemconfig(self._pause_tx,
                 text="▶  SPACE  —  PAUSE READING", fill=DIM)
+
+    # ── Pause toggle ─────────────────────────────────────────────────────────
+    def _toggle_pause(self):
+        self.paused = not self.paused
+        if self.paused:
+            self.c.itemconfig(self._pause_overlay,
+                text="⏸  PAUSED\nSPACE again = close  •  ESC = close",
+                state="normal")
+            self.c.itemconfig(self._zone_hint, text="")
+        else:
             self.c.itemconfig(self._pause_overlay, state="hidden")
+        self._refresh_pause_style()
 
     # ── Events ───────────────────────────────────────────────────────────────
     def _motion(self, event):
