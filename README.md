@@ -3,6 +3,7 @@
 A real-time mouse polling rate detector for Windows with a modern 1920x1080 HUD.
 
 ## Features
+- Press space when wanting to pause to exit program / file
 - Detects polling rates up to **8000 Hz** accurately
 - Beautiful two-column layout: circular speedometer gauge + large detection zone
 - Smooth animated arc that lerps to your real polling rate
