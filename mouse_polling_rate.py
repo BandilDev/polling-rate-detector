@@ -157,6 +157,8 @@ class App:
         self.root.bind("<Motion>",  self._motion)
         self.root.bind("<space>",   lambda e: self._toggle_pause())
         self.root.bind("<Escape>",  lambda e: self.root.destroy())
+        self.root.bind("r",         lambda e: self._reset())
+        self.root.bind("R",         lambda e: self._reset())
 
     # ── Scale shortcuts ───────────────────────────────────────────────────────
     def sc(self, n): return int(n * self.S)
