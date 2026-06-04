@@ -138,9 +138,10 @@ class App:
         self.GCY  = int(BASE_GCY  * SH / BASE_H)   # gauge cy tracks height
         self.GR   = sc(BASE_GR)                     # radius uniform scale
 
-        # Go fullscreen at native resolution
+        # Borderless window covering full screen — no cursor confinement
+        root.overrideredirect(True)
         root.geometry(f"{SW}x{SH}+0+0")
-        root.attributes('-fullscreen', True)
+        root.lift()
 
         self.peak     = 0
         self.current  = 0
